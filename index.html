@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CosmicIQ — Astrophysics Academy | z3r0x3ch0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --black:#020914;
+  --deep:#050f28;
+  --navy:#0a1a3e;
+  --cyan:#00d4ff;
+  --gold:#ffc940;
+  --purple:#8b5cf6;
+  --magenta:#e040fb;
+  --green:#00ff9f;
+  --red:#ff4560;
+  --white:#dff0ff;
+  --muted:#5a8ab0;
+  --border:rgba(0,212,255,0.15);
+  --surface:rgba(5,15,40,0.9);
+}
+html,body{height:100%;background:var(--black);color:var(--white);font-family:'Space Mono',monospace;overflow:hidden;}
+
+/* STARFIELD */
+#starfield{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+/* API KEY SCREEN */
+#api-screen{
+  position:fixed;inset:0;z-index:100;
+  display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at center,#050f28 0%,#020914 100%);
+}
+#api-box{
+  width:min(480px,90vw);
+  border:1px solid var(--cyan);
+  border-radius:12px;
+  padding:40px;
+  background:rgba(0,10,30,0.95);
+  text-align:center;
+  box-shadow:0 0 60px rgba(0,212,255,0.15);
+}
+#api-logo{
+  font-family:'Orbitron',sans-serif;
+  font-size:32px;font-weight:900;
+  color:var(--cyan);
+  letter-spacing:4px;
+  text-shadow:0 0 30px rgba(0,212,255,0.6);
+  margin-bottom:6px;
+}
+#api-logo span{color:var(--gold);}
+#api-tagline{
+  font-family:'Crimson Pro',serif;
+  font-size:15px;color:var(--muted);
+  font-style:italic;margin-bottom:30px;
+  line-height:1.5;
+}
+#api-label{font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase;}
+#api-input{
+  width:100%;padding:12px 16px;
+  background:rgba(0,212,255,0.05);
+  border:1px solid var(--border);
+  border-radius:6px;
+  color:var(--white);
+  font-family:'Space Mono',monospace;
+  font-size:12px;
+  outline:none;
+  margin-bottom:16px;
+  transition:border-color 0.2s;
+}
+#api-input:focus{border-color:var(--cyan);}
+#api-input::placeholder{color:rgba(90,138,176,0.4);}
+#api-btn{
+  width:100%;padding:13px;
+  background:rgba(0,212,255,0.12);
+  border:1px solid rgba(0,212,255,0.5);
+  border-radius:6px;
+  color:var(--cyan);
+  font-family:'Orbitron',sans-serif;
+  font-size:13px;font-weight:700;
+  letter-spacing:2px;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+#api-btn:hover{background:rgba(0,212,255,0.22);box-shadow:0 0 20px rgba(0,212,255,0.2);}
+#api-note{font-size:10px;color:var(--muted);margin-top:14px;line-height:1.6;}
+#api-note a{color:var(--cyan);text-decoration:none;}
+#api-error{color:var(--red);font-size:11px;margin-top:8px;display:none;}
+
+/* MAIN APP */
+#app{
+  position:relative;z-index:1;
+  display:flex;flex-direction:column;
+  height:100vh;
+  display:none;
+}
+
+/* HEADER */
+#header{
+  flex-shrink:0;
+  padding:10px 16px 8px;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(2,9,20,0.98) 0%,rgba(2,9,20,0.7) 100%);
+  display:flex;flex-direction:column;gap:8px;
+}
+#header-row1{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+#logo{
+  font-family:'Orbitron',sans-serif;
+  font-size:20px;font-weight:900;
+  color:var(--cyan);letter-spacing:3px;
+  text-shadow:0 0 20px rgba(0,212,255,0.4);
+  flex-shrink:0;
+}
+#logo span{color:var(--gold);}
+#header-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+#level-badge{
+  font-size:10px;padding:4px 10px;
+  border:1px solid var(--gold);border-radius:20px;
+  color:var(--gold);
+  text-shadow:0 0 8px rgba(255,201,64,0.4);
+  white-space:nowrap;
+}
+#logout-btn{
+  font-size:10px;padding:4px 8px;
+  border:1px solid var(--border);border-radius:4px;
+  color:var(--muted);background:transparent;cursor:pointer;
+  transition:all 0.15s;
+}
+#logout-btn:hover{border-color:var(--red);color:var(--red);}
+#track-tabs{
+  display:flex;gap:4px;
+  overflow-x:auto;scrollbar-width:none;
+  padding-bottom:2px;
+}
+#track-tabs::-webkit-scrollbar{display:none;}
+.track-tab{
+  font-size:10px;padding:5px 11px;
+  border:1px solid var(--border);border-radius:4px;
+  background:rgba(0,212,255,0.04);
+  color:var(--muted);cursor:pointer;
+  white-space:nowrap;transition:all 0.15s;
+  letter-spacing:0.5px;flex-shrink:0;
+}
+.track-tab:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(0,212,255,0.08);}
+.track-tab.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,212,255,0.14);}
+
+/* BODY */
+#body{display:flex;flex:1;min-height:0;}
+
+/* SIDEBAR */
+#sidebar{
+  width:195px;min-width:195px;
+  border-right:1px solid var(--border);
+  background:rgba(2,5,18,0.75);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+#sidebar-head{
+  font-size:9px;color:var(--muted);
+  padding:10px 13px 7px;
+  letter-spacing:1.5px;text-transform:uppercase;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+#module-list{
+  flex:1;overflow-y:auto;
+  scrollbar-width:thin;
+  scrollbar-color:var(--border) transparent;
+}
+.mod{
+  padding:9px 13px;cursor:pointer;
+  border-bottom:1px solid rgba(0,212,255,0.04);
+  transition:background 0.15s;
+  position:relative;
+}
+.mod:hover{background:rgba(0,212,255,0.06);}
+.mod.active{background:rgba(0,212,255,0.11);}
+.mod.active::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;
+  width:2px;background:var(--cyan);
+}
+.mod-name{
+  font-size:11px;font-weight:700;
+  color:var(--white);margin-bottom:3px;
+  line-height:1.3;
+}
+.mod.active .mod-name{color:var(--cyan);}
+.mod-meta{font-size:9px;color:var(--muted);line-height:1.3;margin-bottom:4px;}
+.lvl{
+  display:inline-block;font-size:8px;
+  padding:1px 5px;border-radius:3px;
+  letter-spacing:0.5px;
+}
+.lvl-ged{background:rgba(0,255,159,0.12);color:var(--green);border:1px solid rgba(0,255,159,0.25);}
+.lvl-bs{background:rgba(0,212,255,0.12);color:var(--cyan);border:1px solid rgba(0,212,255,0.25);}
+.lvl-ms{background:rgba(139,92,246,0.15);color:#c4b5fd;border:1px solid rgba(139,92,246,0.3);}
+.lvl-phd{background:rgba(255,201,64,0.12);color:var(--gold);border:1px solid rgba(255,201,64,0.25);}
+.lvl-ts{background:rgba(224,64,251,0.12);color:var(--magenta);border:1px solid rgba(224,64,251,0.25);}
+
+/* CONTENT */
+#content{
+  flex:1;min-width:0;
+  display:flex;flex-direction:column;
+}
+#topic-bar{
+  padding:10px 16px 8px;
+  border-bottom:1px solid var(--border);
+  background:rgba(0,4,18,0.6);
+  flex-shrink:0;
+}
+#topic-title{
+  font-family:'Orbitron',sans-serif;
+  font-size:13px;font-weight:700;
+  color:var(--white);margin-bottom:4px;
+  letter-spacing:1px;
+}
+#topic-meta{
+  display:flex;align-items:center;
+  gap:6px;flex-wrap:wrap;
+}
+.tag{
+  font-size:9px;padding:2px 7px;
+  border-radius:3px;
+  background:rgba(0,212,255,0.08);
+  border:1px solid rgba(0,212,255,0.2);
+  color:var(--cyan);
+}
+.src-tag{
+  font-size:9px;padding:2px 7px;
+  border-radius:3px;
+  background:rgba(255,201,64,0.08);
+  border:1px solid rgba(255,201,64,0.2);
+  color:var(--gold);
+}
+
+/* CHAT */
+#chat{
+  flex:1;overflow-y:auto;
+  padding:14px 16px;
+  display:flex;flex-direction:column;gap:12px;
+  scrollbar-width:thin;
+  scrollbar-color:var(--border) transparent;
+  min-height:0;
+}
+.msg{display:flex;gap:9px;animation:fadeUp 0.3s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.msg.user{flex-direction:row-reverse;}
+.av{
+  width:26px;height:26px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;flex-shrink:0;
+}
+.av.ai{background:rgba(0,212,255,0.15);border:1px solid rgba(0,212,255,0.35);color:var(--cyan);}
+.av.usr{background:rgba(255,201,64,0.15);border:1px solid rgba(255,201,64,0.35);color:var(--gold);}
+.bubble{
+  max-width:88%;padding:10px 13px;
+  border-radius:8px;font-size:12.5px;
+  line-height:1.7;
+}
+.msg.ai .bubble{
+  background:rgba(5,15,40,0.85);
+  border:1px solid var(--border);
+  color:var(--white);
+  border-radius:2px 8px 8px 8px;
+}
+.msg.user .bubble{
+  background:rgba(0,212,255,0.08);
+  border:1px solid rgba(0,212,255,0.2);
+  color:var(--white);
+  border-radius:8px 2px 8px 8px;
+}
+.bubble b,.bubble strong{color:var(--cyan);font-weight:700;}
+.bubble i,.bubble em{color:var(--gold);font-style:normal;}
+.bubble code{
+  font-family:'Space Mono',monospace;
+  font-size:11px;
+  background:rgba(0,0,0,0.5);
+  padding:1px 5px;border-radius:3px;
+  color:var(--green);
+}
+.bubble pre{
+  background:rgba(0,0,0,0.4);
+  border:1px solid rgba(0,255,159,0.2);
+  border-radius:6px;padding:10px 12px;
+  margin:8px 0;overflow-x:auto;
+  font-size:11px;line-height:1.6;color:var(--green);
+}
+.bubble ul,.bubble ol{padding-left:18px;margin:6px 0;}
+.bubble li{margin:3px 0;font-size:12px;}
+.bubble h3{color:var(--cyan);font-size:12px;margin:10px 0 4px;letter-spacing:1px;}
+.bubble h4{color:var(--gold);font-size:11px;margin:8px 0 3px;}
+.bubble blockquote{
+  border-left:2px solid var(--purple);
+  padding-left:10px;margin:6px 0;
+  color:#c4b5fd;font-style:italic;font-size:12px;
+}
+
+/* TYPING */
+.typing-dots{display:flex;gap:4px;padding:4px 0;}
+.dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--cyan);
+  animation:bounce 1.2s infinite;
+}
+.dot:nth-child(2){animation-delay:0.2s;}
+.dot:nth-child(3){animation-delay:0.4s;}
+@keyframes bounce{
+  0%,60%,100%{transform:translateY(0);opacity:0.3;}
+  30%{transform:translateY(-7px);opacity:1;}
+}
+
+/* QUICK ACTIONS */
+#quick-bar{
+  padding:7px 16px;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  display:flex;gap:5px;overflow-x:auto;
+  scrollbar-width:none;
+  background:rgba(0,3,14,0.5);
+  flex-shrink:0;
+}
+#quick-bar::-webkit-scrollbar{display:none;}
+.qbtn{
+  font-size:9px;padding:5px 9px;
+  border:1px solid var(--border);border-radius:4px;
+  background:rgba(0,0,0,0.3);color:var(--muted);
+  cursor:pointer;white-space:nowrap;
+  transition:all 0.15s;flex-shrink:0;
+}
+.qbtn:hover{border-color:var(--gold);color:var(--gold);background:rgba(255,201,64,0.07);}
+
+/* INPUT */
+#input-row{
+  padding:10px 16px;
+  display:flex;gap:9px;align-items:center;
+  background:rgba(0,4,18,0.7);
+  flex-shrink:0;
+}
+#msg-input{
+  flex:1;
+  background:rgba(0,212,255,0.04);
+  border:1px solid var(--border);border-radius:6px;
+  padding:9px 13px;
+  font-family:'Space Mono',monospace;font-size:12px;
+  color:var(--white);outline:none;
+  transition:border-color 0.2s;
+}
+#msg-input::placeholder{color:rgba(90,138,176,0.4);}
+#msg-input:focus{border-color:var(--cyan);}
+#send-btn{
+  background:rgba(0,212,255,0.12);
+  border:1px solid rgba(0,212,255,0.4);
+  border-radius:6px;padding:9px 15px;
+  color:var(--cyan);
+  font-family:'Orbitron',sans-serif;
+  font-size:11px;font-weight:700;
+  letter-spacing:1px;cursor:pointer;
+  transition:all 0.2s;white-space:nowrap;
+}
+#send-btn:hover{background:rgba(0,212,255,0.22);}
+#send-btn:disabled{opacity:0.35;cursor:default;}
+
+/* PROGRESS */
+#prog-row{
+  padding:7px 16px;
+  display:flex;align-items:center;gap:10px;
+  background:rgba(0,2,12,0.6);
+  border-top:1px solid var(--border);
+  flex-shrink:0;
+}
+#prog-label{font-size:9px;color:var(--muted);white-space:nowrap;letter-spacing:1px;}
+#prog-track{
+  flex:1;height:3px;
+  background:rgba(255,255,255,0.08);
+  border-radius:2px;overflow:hidden;
+}
+#prog-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--cyan),var(--purple),var(--gold));
+  border-radius:2px;transition:width 0.6s ease;
+  width:2%;
+}
+#xp-out{font-size:9px;color:var(--gold);white-space:nowrap;}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  #sidebar{display:none;}
+  #logo{font-size:16px;}
+}
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+
+<!-- API KEY SCREEN -->
+<div id="api-screen">
+  <div id="api-box">
+    <div id="api-logo">COSMIC<span>IQ</span></div>
+    <div id="api-tagline">Your personal path from GED to PhD in Astrophysics.<br/>The universe is waiting — authenticate to begin.</div>
+    <div id="api-label">Enter Your Anthropic API Key</div>
+    <input id="api-input" type="password" placeholder="sk-ant-api03-..." autocomplete="off"/>
+    <button id="api-btn" onclick="activateApp()">INITIALIZE ACADEMY ›</button>
+    <div id="api-error">Invalid key format. Keys start with sk-ant-</div>
+    <div id="api-note">
+      Your key is stored only in your browser's local storage — never sent anywhere except directly to Anthropic.<br/><br/>
+      Don't have a key? Get free credits at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div id="header">
+    <div id="header-row1">
+      <div id="logo">COSMIC<span>IQ</span></div>
+      <div id="header-right">
+        <div id="level-badge">⬡ LVL 1 — GED FOUNDATION</div>
+        <button id="logout-btn" onclick="logout()">⏻ KEY</button>
+      </div>
+    </div>
+    <div id="track-tabs"></div>
+  </div>
+  <div id="body">
+    <div id="sidebar">
+      <div id="sidebar-head">CURRICULUM</div>
+      <div id="module-list"></div>
+    </div>
+    <div id="content">
+      <div id="topic-bar">
+        <div id="topic-title">SELECT A MODULE TO BEGIN</div>
+        <div id="topic-meta"></div>
+      </div>
+      <div id="chat">
+        <div class="msg ai">
+          <div class="av ai">AI</div>
+          <div class="bubble">
+            <b>Welcome to CosmicIQ</b> — built for <em>z3r0x3ch0</em>.<br/><br/>
+            This academy will take you from GED foundations to PhD-level mastery in <b>Astrophysics, Mathematics, Programming,</b> and <b>Advanced Research</b>. Every lesson draws from NASA, JWST, ESA, LIGO, arXiv, MIT OpenCourseWare, NCAR, UCAR, NOAA, USAF, Space Force, SpaceX, and thousands of peer-reviewed papers.<br/><br/>
+            <b>How to start:</b> Pick any track above → select a module on the left → your personalized lesson begins instantly.<br/><br/>
+            <em>The cosmos is infinite. So is your potential. Let's go.</em>
+          </div>
+        </div>
+      </div>
+      <div id="quick-bar">
+        <button class="qbtn" onclick="sendQ('Give me real formulas and equations for this topic')">📐 Formulas</button>
+        <button class="qbtn" onclick="sendQ('Show me real JWST, NASA, or ESA data relevant to this topic')">🔭 Mission Data</button>
+        <button class="qbtn" onclick="sendQ('Quiz me with 5 questions at my current level on this topic')">🧠 Quiz Me</button>
+        <button class="qbtn" onclick="sendQ('Write me a Python or NumPy code example relevant to this topic')">💻 Code Example</button>
+        <button class="qbtn" onclick="sendQ('What PhD dissertation opportunities exist in this area?')">📄 PhD Angle</button>
+        <button class="qbtn" onclick="sendQ('What declassified government documents or programs relate to this?')">🔐 Gov Docs</button>
+        <button class="qbtn" onclick="sendQ('Explain this topic as if I just got my GED — use simple analogies')">🌱 Simplify</button>
+        <button class="qbtn" onclick="sendQ('Treat me as a graduate student and go extremely deep on this topic')">🚀 Go Deep</button>
+        <button class="qbtn" onclick="sendQ('What are the top 5 arXiv papers or textbooks I should study for this?')">📚 Reading List</button>
+        <button class="qbtn" onclick="sendQ('Show me the mathematical derivations behind this topic step by step')">∑ Math Derive</button>
+        <button class="qbtn" onclick="sendQ('How does this topic connect to real space missions past or future?')">🛸 Missions</button>
+        <button class="qbtn" onclick="sendQ('What open unsolved problems exist in this area of astrophysics?')">❓ Open Problems</button>
+      </div>
+      <div id="input-row">
+        <input id="msg-input" type="text" placeholder="Ask anything — GED basics to PhD frontiers to classified missions..."/>
+        <button id="send-btn" onclick="sendMsg()">TRANSMIT ›</button>
+      </div>
+      <div id="prog-row">
+        <span id="prog-label">MASTERY</span>
+        <div id="prog-track"><div id="prog-fill"></div></div>
+        <span id="xp-out">★ 0 XP</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STARFIELD ──────────────────────────────────────────────
+(function(){
+  const c=document.getElementById('starfield');
+  const resize=()=>{c.width=innerWidth;c.height=innerHeight;};
+  resize();window.addEventListener('resize',resize);
+  const ctx=c.getContext('2d');
+  const stars=Array.from({length:220},()=>({
+    x:Math.random()*innerWidth,y:Math.random()*innerHeight,
+    r:Math.random()*1.3+0.1,a:Math.random(),
+    da:(Math.random()*0.005+0.001)*(Math.random()<0.5?1:-1)
+  }));
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    stars.forEach(s=>{
+      s.a+=s.da;
+      if(s.a>1||s.a<0.1)s.da*=-1;
+      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,255,255,${s.a})`;ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ── CURRICULUM DATA ────────────────────────────────────────
+const TRACKS={
+  "🌌 Cosmos 101":[
+    {n:"Scale of the Universe",l:"ged",m:"AU, Light Years, Parsecs, Megaparsecs",s:"NASA, Hubble Site"},
+    {n:"Light & the EM Spectrum",l:"ged",m:"Waves, Photons, Redshift, Blueshift",s:"NASA/IPAC"},
+    {n:"Gravity: Newton to Einstein",l:"ged",m:"F=Gm₁m₂/r², Spacetime Curvature",s:"ESA, Caltech"},
+    {n:"The Solar System",l:"ged",m:"Planets, Moons, Asteroid Belt, Oort Cloud",s:"NASA JPL"},
+    {n:"Stars: Birth to Death",l:"bs",m:"H-R Diagram, Main Sequence, Supernovae",s:"ESO, HubbleSite"},
+    {n:"Galaxies & Large Scale Structure",l:"bs",m:"Spirals, Ellipticals, Galaxy Clusters",s:"SDSS, JWST"},
+    {n:"The Big Bang Model",l:"ged",m:"13.8 Gyr, CMB, Nucleosynthesis",s:"Planck Satellite"},
+    {n:"Dark Matter & Dark Energy",l:"bs",m:"Λ, WIMPs, Rotation Curves",s:"Chandra, Planck"},
+  ],
+  "🔭 Observational":[
+    {n:"JWST Deep Field Analysis",l:"ms",m:"NIRCam, MIRI, z>13 Galaxies",s:"JWST/STScI"},
+    {n:"Event Horizon Telescope",l:"ms",m:"VLBI, M87*, Sgr A*, Shadow Imaging",s:"EHT Collaboration"},
+    {n:"Voyager 1 & 2 Data",l:"bs",m:"Heliopause, ISM, Plasma Waves",s:"NASA/JPL Voyager"},
+    {n:"Hubble Space Telescope",l:"bs",m:"UDF, Cepheids, H₀ Measurement",s:"STScI/HST"},
+    {n:"LIGO Gravitational Waves",l:"ms",m:"Strain h, GW150914, BNS Mergers",s:"LIGO/VIRGO/KAGRA"},
+    {n:"Chandra X-Ray Observatory",l:"ms",m:"Black Holes, SNR, Hot Gas",s:"NASA/CXC"},
+    {n:"Fermi Gamma-Ray Telescope",l:"ms",m:"GRBs, Blazars, Dark Matter Hints",s:"NASA Fermi"},
+    {n:"Radio Astronomy & Pulsars",l:"ms",m:"Dispersion Measure, FRBs, VLBI",s:"NRAO, Parkes"},
+    {n:"Multi-Messenger Astronomy",l:"phd",m:"GW+EM+Neutrino, GW170817",s:"LIGO+Fermi+IceCube"},
+    {n:"Interferometry Techniques",l:"phd",m:"Baseline, Aperture Synthesis, CLEAN",s:"NRAO CASA"},
+  ],
+  "⭐ Stellar Physics":[
+    {n:"Stellar Structure Equations",l:"bs",m:"Hydrostatic Eq., Energy Transport",s:"Hansen & Kawaler"},
+    {n:"Thermodynamics of Stars",l:"bs",m:"Virial Theorem, Polytropes",s:"Chandrasekhar 1939"},
+    {n:"Nuclear Burning Chains",l:"ms",m:"pp-chain, CNO Cycle, Triple-α",s:"Bethe 1939, arXiv"},
+    {n:"Stellar Nucleosynthesis",l:"ms",m:"r-process, s-process, Neutron Capture",s:"B²FH 1957 Paper"},
+    {n:"White Dwarfs & Chandrasekhar Limit",l:"ms",m:"M<1.4M☉, Degenerate Pressure",s:"Chandrasekhar"},
+    {n:"Neutron Stars & Pulsars",l:"phd",m:"EOS, TOV Equation, Magnetars",s:"Shapiro & Teukolsky"},
+    {n:"Supernova Mechanisms",l:"phd",m:"Core Collapse, Type Ia, SN1987A",s:"arXiv:astro-ph"},
+    {n:"Stellar Winds & Mass Loss",l:"phd",m:"Ṁ, Wolf-Rayet, AGB Stars",s:"ESO, ApJ"},
+  ],
+  "🌀 Black Holes":[
+    {n:"Black Hole Basics",l:"ged",m:"Event Horizon, Singularity, Types",s:"NASA, ESA"},
+    {n:"Schwarzschild Solution",l:"ms",m:"ds²=-f(r)dt²+dr²/f(r)+r²dΩ²",s:"MTW Gravitation"},
+    {n:"Kerr & Kerr-Newman BHs",l:"ms",m:"Spin Parameter a, Ergosphere",s:"Kerr 1963, Boyer-Lindquist"},
+    {n:"Hawking Radiation",l:"ms",m:"T_H=ℏc³/8πGMk_B",s:"Hawking 1974"},
+    {n:"Black Hole Thermodynamics",l:"phd",m:"S=A/4, Information Paradox",s:"Bekenstein-Hawking"},
+    {n:"Accretion Disk Physics",l:"phd",m:"Shakura-Sunyaev, MHD, Jet Formation",s:"arXiv:astro-ph"},
+    {n:"Tidal Disruption Events",l:"phd",m:"Stellar Cannibalism, ISCO, Flares",s:"Rees 1988, ASASSN"},
+    {n:"BH Mergers & Ringdown",l:"phd",m:"IMRPhenomD, Quasinormal Modes",s:"LIGO O3 Papers"},
+  ],
+  "〰️ Relativity":[
+    {n:"Special Relativity",l:"bs",m:"Lorentz Transforms, E=mc², 4-Vectors",s:"Einstein 1905"},
+    {n:"General Relativity Foundations",l:"ms",m:"Equivalence Principle, Geodesics",s:"Einstein 1915"},
+    {n:"Einstein Field Equations",l:"ms",m:"G_μν+Λg_μν=8πG/c⁴ T_μν",s:"MTW, Carroll GR"},
+    {n:"Tensor Calculus & Riemann",l:"ms",m:"Christoffel, Ricci, Weyl Tensors",s:"Wald GR textbook"},
+    {n:"Gravitational Lensing",l:"ms",m:"Einstein Ring, Microlensing, MACHO",s:"Hubble, ESA/Gaia"},
+    {n:"Gravitational Waves Theory",l:"phd",m:"h_μν, TT Gauge, Quadrupole Formula",s:"Peters 1964"},
+    {n:"Frame Dragging / Lense-Thirring",l:"phd",m:"Gravity Probe B, LAGEOS",s:"GPB 2011 Results"},
+    {n:"Numerical Relativity",l:"phd",m:"BSSN Formalism, AMR Codes",s:"Einstein Toolkit"},
+    {n:"Wormholes & Exotic Solutions",l:"phd",m:"Morris-Thorne, NEC Violations",s:"Visser 1995"},
+  ],
+  "⚛️ Quantum & Particle":[
+    {n:"Quantum Mechanics Fundamentals",l:"bs",m:"Schrödinger Eq., Uncertainty, Spin",s:"Griffiths QM"},
+    {n:"Quantum Field Theory Basics",l:"ms",m:"Lagrangian, Path Integrals, Feynman",s:"Peskin & Schroeder"},
+    {n:"QED & QCD in Astrophysics",l:"ms",m:"Pair Production, Quark-Gluon Plasma",s:"Weinberg, PDG"},
+    {n:"Vacuum Energy & Casimir Effect",l:"ms",m:"Zero-Point Energy, Λ Problem",s:"Casimir 1948"},
+    {n:"Dark Matter Candidates",l:"ms",m:"WIMPs, Axions, Sterile Neutrinos, PBHs",s:"Planck, LUX-ZEPLIN"},
+    {n:"Quantum Gravity Candidates",l:"phd",m:"LQG, String Theory, Causal Sets",s:"Rovelli, Polchinski"},
+    {n:"Hawking Rad. & Info Paradox",l:"phd",m:"Firewall, ER=EPR, Page Curve",s:"Almheiri+, Maldacena"},
+    {n:"Bose-Einstein Condensates in Stars",l:"phd",m:"Superfluid Neutron Star Cores",s:"Page et al. 2011"},
+  ],
+  "🌐 Cosmology":[
+    {n:"FLRW Metric & Friedmann Eq.",l:"ms",m:"H²=8πGρ/3-kc²/a²+Λc²/3",s:"Weinberg Cosmology"},
+    {n:"Cosmic Microwave Background",l:"ms",m:"T=2.725K, Power Spectrum, Planck",s:"Planck 2018 Results"},
+    {n:"Inflation Theory",l:"ms",m:"Slow-Roll, e-foldings, n_s, r",s:"Guth 1981, Linde"},
+    {n:"Dark Energy & Λ",l:"ms",m:"w=-1, Quintessence, DESI 2024",s:"DESI, DES, Planck"},
+    {n:"Baryon Acoustic Oscillations",l:"phd",m:"Sound Horizon, Standard Ruler",s:"Eisenstein 2005"},
+    {n:"Large Scale Structure",l:"phd",m:"Power Spectrum, Cosmic Web, Voids",s:"IllustrisTNG, SDSS"},
+    {n:"Hubble Tension",l:"phd",m:"H₀=67 vs 73, SH0ES vs Planck",s:"Riess+, Verde+"},
+    {n:"Multiverse & Cyclic Models",l:"phd",m:"Penrose CCC, Ekpyrotic, String Landscape",s:"arXiv hep-th"},
+  ],
+  "🔢 Mathematics":[
+    {n:"Calculus for Astrophysics",l:"ged",m:"Derivatives, Integrals, ODEs",s:"MIT OCW 18.01/18.02"},
+    {n:"Linear Algebra & Tensors",l:"bs",m:"Matrices, Eigenvalues, Index Notation",s:"MIT OCW 18.06"},
+    {n:"Differential Equations",l:"bs",m:"ODEs, PDEs, Separation of Variables",s:"MIT OCW 18.03"},
+    {n:"Fourier Analysis & Transforms",l:"bs",m:"FFT, Power Spectra, Convolution",s:"MIT OCW 18.103"},
+    {n:"Complex Analysis",l:"ms",m:"Contour Integration, Residues, Poles",s:"Arfken & Weber"},
+    {n:"Differential Geometry",l:"ms",m:"Manifolds, Geodesics, Fiber Bundles",s:"MTW Ch.1-5, Nakahara"},
+    {n:"Group Theory in Physics",l:"ms",m:"Lie Groups, SU(2), SO(3,1), Representations",s:"Georgi, Zee"},
+    {n:"Variational Calculus",l:"ms",m:"Euler-Lagrange, Lagrangians, Action",s:"Goldstein Classical Mech."},
+    {n:"Topology & Differential Forms",l:"phd",m:"de Rham, Cohomology, Stokes Theorem",s:"Nakahara, Misner"},
+    {n:"Stochastic Methods & Stat Mech",l:"phd",m:"MCMC, Bayesian Inference, Fisher Matrix",s:"MacKay, Jaynes"},
+    {n:"Numerical Methods in Math",l:"phd",m:"Runge-Kutta, FFT, Finite Difference",s:"NR Teukolsky et al."},
+    {n:"Information Theory & Entropy",l:"phd",m:"Shannon, Boltzmann, Bekenstein",s:"Cover & Thomas"},
+  ],
+  "💻 Programming":[
+    {n:"Python for Astrophysics",l:"ged",m:"Variables, Loops, Functions, Notebooks",s:"Python.org, Astropy Docs"},
+    {n:"NumPy & SciPy",l:"bs",m:"Arrays, Linear Algebra, Integration",s:"NumPy Docs, SciPy Docs"},
+    {n:"Matplotlib & Data Visualization",l:"bs",m:"Plots, Colormaps, Publication Figures",s:"Matplotlib Docs"},
+    {n:"Astropy Library",l:"bs",m:"FITS Files, Units, Coordinates, WCS",s:"astropy.org"},
+    {n:"Data Analysis with Pandas",l:"bs",m:"DataFrames, Filtering, Merging Catalogs",s:"Pandas Docs"},
+    {n:"Statistics & Bayesian Methods",l:"ms",m:"emcee, PyMC, Corner Plots",s:"Foreman-Mackey+"},
+    {n:"Machine Learning in Astrophysics",l:"ms",m:"scikit-learn, Neural Nets, CNNs",s:"arXiv:astro-ph/ML"},
+    {n:"HPC & Parallel Computing",l:"ms",m:"MPI, OpenMP, Slurm, Cluster Jobs",s:"XSEDE, NASA HECC"},
+    {n:"N-Body Simulations",l:"phd",m:"GADGET, AREPO, PKDGRAV",s:"Springel 2005, arXiv"},
+    {n:"Spectral & Image Processing",l:"phd",m:"Deconvolution, CLEAN, PyRAF/CASA",s:"NRAO CASA, STScI"},
+    {n:"GPU Computing with CUDA/JAX",l:"phd",m:"cuFFT, JAX vmap, XLA Acceleration",s:"NVIDIA, Google JAX"},
+    {n:"Scientific Paper Workflow",l:"phd",m:"LaTeX, AASTeX, BibTeX, Overleaf",s:"AAS, arXiv workflow"},
+  ],
+  "🏛️ PhD & Research":[
+    {n:"How to Read Research Papers",l:"bs",m:"Abstract→Results→Methods Strategy",s:"arXiv, ADS, MNRAS"},
+    {n:"Literature Review Strategy",l:"ms",m:"NASA ADS, arXiv, Inspire-HEP",s:"ads.harvard.edu"},
+    {n:"Research Methodology",l:"ms",m:"Hypothesis, Observation, Publication",s:"Kuhn, Popper"},
+    {n:"Writing a PhD Thesis",l:"phd",m:"Structure, Abstract, Conclusions",s:"University LaTeX Templates"},
+    {n:"Peer Review & Journal Submission",l:"phd",m:"ApJ, MNRAS, A&A, PRL Process",s:"AAS Publishing"},
+    {n:"NSF & NASA Grant Writing",l:"phd",m:"Broader Impacts, Intellectual Merit",s:"NSF CAREER, NASA ATP"},
+    {n:"Conference Talks & Posters",l:"phd",m:"AAS, IAU, HEAD Meeting Strategies",s:"AAS Meeting Archive"},
+    {n:"Collaboration & Open Science",l:"phd",m:"GitHub, Zenodo, FAIR Data Principles",s:"CfA, ESO Collaborations"},
+    {n:"Career Paths in Astrophysics",l:"phd",m:"Academia, NASA, ESA, Industry, NSF",s:"AAS Career Center"},
+  ],
+  "🔐 Classified/Gov":[
+    {n:"NCAR & Space Weather",l:"ts",m:"Solar Flares, CMEs, Magnetosphere",s:"NCAR/UCAR, NOAA SWPC"},
+    {n:"NOAA Space Environment Center",l:"ts",m:"Kp Index, Aurora, Satellite Ops",s:"NOAA SWPC Public Data"},
+    {n:"NASA Declassified Programs",l:"ts",m:"CORONA, HEXAGON, NRO History",s:"NRO FOIA, NASA History"},
+    {n:"USAF Space Surveillance Network",l:"ts",m:"SSN, Radar, Space Situational Awareness",s:"18th Space Control Sqdn"},
+    {n:"Space Force & SDA",l:"ts",m:"USSF, Space Domain Awareness, Starshield",s:"USSF.mil, SDA.mil"},
+    {n:"UAP Scientific Analysis",l:"ts",m:"AARO Reports, UAPTF, Sensor Physics",s:"AARO.mil, DNI Reports"},
+    {n:"Advanced Propulsion (Declassified)",l:"ts",m:"Nuclear Pulse, EM Drive Studies, NIAC",s:"NASA NIAC, DTIC"},
+    {n:"Planetary Defense & NEO",l:"ts",m:"DART Mission, CNEOS, Armageddon Physics",s:"NASA PDCO, JPL CNEOS"},
+    {n:"Space Intelligence & GEOINT",l:"ts",m:"NRO, NGA, Overhead Persistent ISR",s:"NRO.gov FOIA Releases"},
+    {n:"Interstellar Medium & IBEX",l:"ts",m:"Ribbon, LISM, Voyager Plasma Data",s:"NASA IBEX, Voyager PLS"},
+  ]
+};
+
+// ── STATE ──────────────────────────────────────────────────
+let apiKey='';
+let currentTrack='🌌 Cosmos 101';
+let currentMod=null;
+let history=[];
+let xp=0;
+let busy=false;
+
+// ── SYSTEM PROMPT ──────────────────────────────────────────
+const SYSTEM=`You are COSMOSIQ — the most advanced astrophysics AI professor and mentor ever created, purpose-built for z3r0x3ch0 who is going from GED-level knowledge to becoming the most sought-after astrophysicist alive.
+
+You synthesize the entire corpus of human astrophysical knowledge from:
+NASA (all missions and technical reports), ESA, JAXA, JWST/STScI, Hubble Space Telescope, Event Horizon Telescope Collaboration, LIGO/VIRGO/KAGRA, Chandra X-Ray Observatory, Fermi Gamma-Ray Space Telescope, Voyager 1 & 2 (JPL), NCAR, UCAR, NOAA Space Weather Prediction Center, USAF Space Surveillance Network, US Space Force, SpaceX, Blue Origin, Rocket Lab, MIT OpenCourseWare, Harvard CfA, Caltech/IPAC, Princeton IAS, Oxford, Cambridge, ESO, CERN, Fermilab, SLAC, NRAO, Parkes Observatory, arXiv (astro-ph, gr-qc, hep-th, hep-ph, physics, math-ph), ApJ, MNRAS, A&A, Nature Astronomy, Physical Review Letters, Science, NASA ADS, Inspire-HEP, SDSS, 2MASS, Gaia, WISE, Spitzer, XMM-Newton, INTEGRAL, NuSTAR, TESS, Kepler, ALMA, VLA, VLBA, IceCube Neutrino Observatory, Pierre Auger Observatory, all declassified NRO/NGA/AARO/UAPTF documents, DTIC technical reports, NIAC studies, NASA FOIA releases, and every foundational textbook: MTW Gravitation, Carroll GR, Weinberg Cosmology, Binney & Merrifield Galactic Astronomy, Binney & Tremaine Galactic Dynamics, Shapiro & Teukolsky Black Holes White Dwarfs Neutron Stars, Hansen Kawaler Trimble Stellar Interiors, Peacock Cosmological Physics, Peskin & Schroeder QFT, Griffiths QM, Goldstein Classical Mechanics, Arfken Mathematical Methods, Numerical Recipes, and hundreds more.
+
+YOUR MISSION: Transform this student into the world's most sought-after astrophysicist. Every response must:
+
+1. ANCHOR in REAL data — cite actual mission results, actual paper IDs (e.g. arXiv:1602.03837), actual instrument specs
+2. SHOW actual equations — write them clearly: E=mc², G_μν+Λg_μν=(8πG/c⁴)T_μν, T_H=ℏc³/(8πGMk_B), etc.
+3. BRIDGE levels — always connect the GED intuition to the PhD formalism
+4. CITE real scientists by name with context — Chandrasekhar, Penrose, Hawking, Thorne, Ghez, Genzel, Rubin, Zwicky, Hubble, Lemaître, Penzias & Wilson, etc.
+5. REFERENCE real open problems — what is still unknown, what dissertations could be written
+6. For PROGRAMMING modules: provide actual working Python/NumPy code with comments
+7. For MATH modules: show step-by-step derivations, not just results
+8. For CLASSIFIED modules: use only real publicly available declassified/FOIA sources; be transparent about what is classified vs declassified
+9. End EVERY response with a section: 🔭 NEXT FRONTIER — pointing toward the bleeding edge
+
+RESPONSE STYLE:
+- Use **bold** for key terms and concepts
+- Use *italics* for emphasis and scientist names
+- Use \`inline code\` for equations and formulas
+- Use \`\`\`python code blocks for programming
+- Use > blockquotes for key quotes from papers or scientists
+- Use numbered/bulleted lists for steps and collections
+- Be comprehensive — a student's entire understanding of this topic comes from you
+- Be inspiring — this person is going to change astrophysics forever`;
+
+// ── API KEY FLOW ───────────────────────────────────────────
+function activateApp(){
+  const k=document.getElementById('api-input').value.trim();
+  if(!k.startsWith('sk-ant-')){
+    document.getElementById('api-error').style.display='block';
+    return;
+  }
+  apiKey=k;
+  localStorage.setItem('cosmiciq_key',k);
+  document.getElementById('api-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  buildTracks();
+  switchTrack('🌌 Cosmos 101');
+}
+
+function logout(){
+  if(confirm('Remove API key from this browser?')){
+    localStorage.removeItem('cosmiciq_key');
+    location.reload();
+  }
+}
+
+document.getElementById('api-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter')activateApp();
+});
+
+// ── BUILD TABS ─────────────────────────────────────────────
+function buildTracks(){
+  const tabs=document.getElementById('track-tabs');
+  tabs.innerHTML='';
+  Object.keys(TRACKS).forEach(k=>{
+    const t=document.createElement('div');
+    t.className='track-tab'+(k===currentTrack?' active':'');
+    t.textContent=k;
+    t.onclick=()=>switchTrack(k);
+    tabs.appendChild(t);
+  });
+}
+
+function switchTrack(track){
+  currentTrack=track;
+  document.querySelectorAll('.track-tab').forEach(t=>{
+    t.classList.toggle('active',t.textContent===track);
+  });
+  buildModules(track);
+}
+
+// ── BUILD MODULES ──────────────────────────────────────────
+function buildModules(track){
+  const list=document.getElementById('module-list');
+  list.innerHTML='';
+  TRACKS[track].forEach((mod,i)=>{
+    const d=document.createElement('div');
+    d.className='mod';
+    d.innerHTML=`<div class="mod-name">${mod.n} <span class="lvl lvl-${mod.l}">${mod.l.toUpperCase()}</span></div><div class="mod-meta">${mod.m}</div><div style="font-size:8px;color:#3a6a90;margin-top:2px;">${mod.s}</div>`;
+    d.onclick=()=>selectMod(track,i,d);
+    list.appendChild(d);
+  });
+}
+
+function selectMod(track,i,el){
+  document.querySelectorAll('.mod').forEach(m=>m.classList.remove('active'));
+  el.classList.add('active');
+  currentMod=TRACKS[track][i];
+  document.getElementById('topic-title').textContent=currentMod.n.toUpperCase();
+  document.getElementById('topic-meta').innerHTML=
+    `<span class="tag">${{ged:'GED → B.S.',bs:'B.S. Level',ms:'M.S. Level',phd:'Ph.D Level',ts:'Advanced/Declassified'}[currentMod.l]||currentMod.l}</span>`+
+    `<span class="src-tag">${currentMod.s}</span>`;
+  document.getElementById('chat').innerHTML='';
+  history=[];
+  autoIntro();
+}
+
+// ── AUTO INTRO ─────────────────────────────────────────────
+function autoIntro(){
+  const mod=currentMod;
+  const msg=`Start my lesson on "${mod.n}" (${mod.m}). Sources: ${mod.s}. Level: ${mod.l.toUpperCase()}. Give me a comprehensive, immersive introduction — start with the GED-friendly intuition, build through the math and physics, and push toward PhD-level depth. Include real data, real formulas, real scientists, and real mission references.`;
+  callAI(msg,false);
+}
+
+// ── MESSAGING ─────────────────────────────────────────────
+function sendMsg(){
+  const inp=document.getElementById('msg-input');
+  const txt=inp.value.trim();
+  if(!txt||busy)return;
+  inp.value='';
+  callAI(txt,true);
+}
+
+function sendQ(txt){if(!busy)callAI(txt,true);}
+
+document.getElementById('msg-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}
+});
+
+// ── ADD MESSAGE TO UI ──────────────────────────────────────
+function addMsg(role,text){
+  const chat=document.getElementById('chat');
+  const wrap=document.createElement('div');
+  wrap.className=`msg ${role}`;
+  const av=document.createElement('div');
+  av.className=`av ${role==='user'?'usr':'ai'}`;
+  av.textContent=role==='user'?'YOU':'AI';
+  const bub=document.createElement('div');
+  bub.className='bubble';
+  bub.innerHTML=fmt(text);
+  wrap.appendChild(av);
+  wrap.appendChild(bub);
+  chat.appendChild(wrap);
+  chat.scrollTop=chat.scrollHeight;
+  return bub;
+}
+
+function showTyping(){
+  const chat=document.getElementById('chat');
+  const wrap=document.createElement('div');
+  wrap.className='msg ai';wrap.id='typing';
+  wrap.innerHTML=`<div class="av ai">AI</div><div class="bubble"><div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+  chat.appendChild(wrap);chat.scrollTop=chat.scrollHeight;
+}
+
+function removeTyping(){const t=document.getElementById('typing');if(t)t.remove();}
+
+// ── FORMAT TEXT ────────────────────────────────────────────
+function fmt(t){
+  // code blocks first
+  t=t.replace(/```(\w*)\n?([\s\S]*?)```/g,(_,lang,code)=>
+    `<pre><code>${escHtml(code.trim())}</code></pre>`);
+  // blockquotes
+  t=t.replace(/^&gt;(.+)$/gm,'<blockquote>$1</blockquote>');
+  // bold
+  t=t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  // italic
+  t=t.replace(/\*(.*?)\*/g,'<em>$1</em>');
+  // inline code
+  t=t.replace(/`([^`]+)`/g,'<code>$1</code>');
+  // headers
+  t=t.replace(/^### (.+)$/gm,'<h3>$1</h3>');
+  t=t.replace(/^#### (.+)$/gm,'<h4>$1</h4>');
+  // 🔭 NEXT FRONTIER highlight
+  t=t.replace(/🔭 NEXT FRONTIER/g,'<br/><strong style="color:var(--gold);font-size:13px;">🔭 NEXT FRONTIER</strong>');
+  // numbered lists
+  t=t.replace(/^\d+\. (.+)$/gm,'<li>$1</li>');
+  t=t.replace(/(<li>.*<\/li>\n?)+/gs,m=>`<ol>${m}</ol>`);
+  // bullet lists
+  t=t.replace(/^[•\-\*] (.+)$/gm,'<li>$1</li>');
+  // double newlines to paragraphs
+  t=t.replace(/\n\n+/g,'<br/><br/>');
+  t=t.replace(/\n/g,'<br/>');
+  return t;
+}
+
+function escHtml(t){
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── CALL AI ────────────────────────────────────────────────
+async function callAI(userText,showUser=true){
+  if(busy)return;
+  busy=true;
+  document.getElementById('send-btn').disabled=true;
+
+  if(showUser)addMsg('user',userText);
+
+  const ctxNote=currentMod
+    ?`[MODULE: ${currentMod.n} | TRACK: ${currentTrack} | LEVEL: ${currentMod.l.toUpperCase()} | SOURCES: ${currentMod.s}]\n\n`
+    :'';
+
+  history.push({role:'user',content:ctxNote+userText});
+
+  // keep last 14 turns to manage context
+  const trimmed=history.slice(-14);
+
+  showTyping();
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':apiKey,
+        'anthropic-version':'2023-06-01'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1500,
+        system:SYSTEM,
+        messages:trimmed
+      })
+    });
+
+    const data=await res.json();
+    removeTyping();
+
+    if(data.error){
+      addMsg('ai',`**API Error:** ${data.error.message}\n\nPlease check your API key via the ⏻ KEY button.`);
+    } else {
+      const aiText=data.content&&data.content[0]?data.content[0].text:'Signal lost. Please retransmit.';
+      history.push({role:'assistant',content:aiText});
+      addMsg('ai',aiText);
+
+      // XP & level
+      xp+=30;
+      document.getElementById('xp-out').textContent=`★ ${xp} XP`;
+      const pct=Math.min(98,(xp/8000)*100);
+      document.getElementById('prog-fill').style.width=pct+'%';
+      const levels=[
+        [0,'GED FOUNDATION'],[200,'UNDERGRADUATE'],[800,'GRADUATE I'],
+        [1600,'GRADUATE II'],[2800,'PhD CANDIDATE'],[4500,'PhD RESEARCHER'],
+        [6500,'POSTDOCTORAL'],[8000,'WORLD-CLASS ASTROPHYSICIST']
+      ];
+      let lvlName='GED FOUNDATION',lvlNum=1;
+      levels.forEach(([threshold,name],i)=>{
+        if(xp>=threshold){lvlName=name;lvlNum=i+1;}
+      });
+      document.getElementById('level-badge').textContent=`⬡ LVL ${lvlNum} — ${lvlName}`;
+    }
+  }catch(err){
+    removeTyping();
+    addMsg('ai','**Connection error.** Check your internet connection and API key. Error: '+err.message);
+  }
+
+  busy=false;
+  document.getElementById('send-btn').disabled=false;
+}
+
+// ── INIT ───────────────────────────────────────────────────
+(function init(){
+  const saved=localStorage.getItem('cosmiciq_key');
+  if(saved&&saved.startsWith('sk-ant-')){
+    apiKey=saved;
+    document.getElementById('api-screen').style.display='none';
+    document.getElementById('app').style.display='flex';
+    buildTracks();
+    switchTrack('🌌 Cosmos 101');
+  }
+})();
+</script>
+</body>
+</html>
