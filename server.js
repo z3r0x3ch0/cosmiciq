@@ -19,3 +19,6 @@ app.get('/api/data', async (req, res) => {
 });
 
 app.listen(port, () => console.log(`Proxy server running on port ${port}`));   
+
+node server.js
+http://localhost:3001/api/data
